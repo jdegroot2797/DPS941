@@ -18,15 +18,23 @@ I2C_2               leftIEM             Integrated Encoder    Encoted mounted on
 ----------------------------------------------------------------------------------------------------*/
 
 
-		// 1 full rotation = 12.56 inch = 1.04feet ( using 627 as target )
+		//directional variables for 'turnRobot' function
+		const int left = 1;
+		const int right = 0;
 
-		void forwardMovement(int target, int power)
+		// 1 full rotation = 12.56 inch = 1.04feet ( using 627 as target )
+		const double rotation = 627;
+
+		void forwardMovement(double target, int power)
 		{
 			resetMotorEncoder(rightMotor);
 			resetMotorEncoder(leftMotor);
 
-			moveMotorTarget(rightMotor,target,power,true);
-			moveMotorTarget(leftMotor,target,power,true);
+			//result holds number in feet
+			double result = target * rotation;
+
+			moveMotorTarget(rightMotor,(int)result,power,true);
+			moveMotorTarget(leftMotor,(int)result,power,true);
 			wait1Msec(10000);
 
 			 while((getMotorTargetCompleted(rightMotor) == false || getMotorTargetCompleted(leftMotor) == false))
@@ -36,30 +44,35 @@ I2C_2               leftIEM             Integrated Encoder    Encoted mounted on
 		}
 
 		// 90 degree turn = ~ 933 as target
-
-		void turnRobot(int target, int power, int direction)
+		void turnRobot(double target, int power, int direction)
 		{
 			resetMotorEncoder(rightMotor);
 			resetMotorEncoder(leftMotor);
 
-			if(direction == 1) // left turn
+			//result holds number in feet
+			double result = target * rotation;
+
+			//left turn
+			if(direction == 1)
 			{
-					moveMotorTarget(rightMotor,target,power,true);
+					moveMotorTarget(rightMotor,(int)result,power,true); //moveMotorTarget takes int for distance therefore the (int) casting
 					moveMotorTarget(leftMotor,0,0,true);
 					wait1Msec(10000);
 				 while((getMotorTargetCompleted(rightMotor) == false || getMotorTargetCompleted(leftMotor) == false))
 		 		 {
 
 		 		 }
-			}else{
-							moveMotorTarget(rightMotor,0,0,true);
-							moveMotorTarget(leftMotor,target,power,true);
-							wait1Msec(10000);
-			 			  while((getMotorTargetCompleted(rightMotor) == false || getMotorTargetCompleted(leftMotor) == false))
-		 				  {
-
-		  				}
-					}
+			}
+			//right turn
+			else
+			{
+						moveMotorTarget(rightMotor,0,0,true);
+						moveMotorTarget(leftMotor,(int)result,power,true); //moveMotorTarget takes int for distance therefore the (int) casting
+						wait1Msec(10000);
+		 			  while((getMotorTargetCompleted(rightMotor) == false || getMotorTargetCompleted(leftMotor) == false))
+	 				  {
+	  				}
+				}
 
 		}
 
@@ -68,14 +81,17 @@ task main()
 
 	wait1Msec(2000);
 
-  forwardMovement(2131, 63); //4 straight
-  turnRobot(1035, 83, 1);
+  forwardMovement(3.49, 63); //4ft straight
+  turnRobot(1.68, 83, left); //2ft left turn
 
-  forwardMovement(1442, 63);
-  turnRobot(1035, 83, 1);
+  forwardMovement(2.0, 63); //
+  turnRobot(1.69, 83, left); //
 
- /* forwardMovement(3135, 63);
-  turnRobot(933, 63, 0);
-  forwardMovement(1881,63);*/
+  forwardMovement(2.75, 63);
+  turnRobot(1.72, 83, right);
+  forwardMovement(2.0,63);
 
+
+	resetMotorEncoder(rightMotor);
+	resetMotorEncoder(leftMotor);
 }
