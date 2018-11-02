@@ -59,11 +59,8 @@ I2C_2               leftIEM             Integrated Encoder    Encoted mounted on
 	void followLineUntilObject(int power, int objDistance)
 	{
 	  /* surfaces, adding them together, then dividing by 2. */
-	  while(SensorValue(sonarSensor) > 6)
+	  while(SensorValue(sonarSensor) > objDistance)
 	  {
-	  	if(SensorValue(sonarSensor) < 16)
-	  		power = power / 2;
-
 	    // RIGHT sensor sees dark:
 	    if(SensorValue(lineFollowerRIGHT) > threshold)
 	    {
@@ -85,28 +82,127 @@ I2C_2               leftIEM             Integrated Encoder    Encoted mounted on
 	      motor[leftMotor]  = 0;
 	      motor[rightMotor] = power;
 	    }
-	    else
+	  }
+	}
+
+		void followLineUntilNoLine(int power)
+		{
+			bool move = true;
+	  /* surfaces, adding them together, then dividing by 2. */
+	  while(move)
+	  {
+	    // RIGHT sensor sees dark:
+	    if(SensorValue(lineFollowerRIGHT) > threshold)
+	    {
+	      // counter-steer right:
+	      motor[leftMotor]  = power;
+	      motor[rightMotor] = 0;
+	    }
+	    // CENTER sensor sees dark:
+	    if(SensorValue(lineFollowerCENTER) > threshold)
+	    {
+	      // go straight
+	      motor[leftMotor]  = power;
+	      motor[rightMotor] = power;
+	    }
+	    // LEFT sensor sees dark:
+	    if(SensorValue(lineFollowerLEFT) > threshold)
+	    {
+	      // counter-steer left:
+	      motor[leftMotor]  = 0;
+	      motor[rightMotor] = power;
+	    }
+	    else if(SensorValue(lineFollowerLEFT) < threshold && SensorValue(lineFollowerCENTER) < threshold && SensorValue(lineFollowerRIGHT) < threshold)
 	    {
 	    	motor[leftMotor]  = 0;
 	      motor[rightMotor] = 0;
+	      move = false;
 	    }
 	  }
 	}
-  void raiseArm(int power)
+
+	void findLineTurnLeft()
 	{
+		bool turn = true;
+		while(turn){
+			if(SensorValue(lineFollowerLEFT) > threshold)
+	    {
+	      // counter-steer left:
+	      motor[leftMotor]  = -16;
+	      motor[rightMotor] = 8;
+	    }
+	    else if(SensorValue(lineFollowerLEFT) > threshold && SensorValue(lineFollowerCENTER) > threshold && SensorValue(lineFollowerRIGHT) < threshold)
+	    {
+	    	motor[leftMotor]  = 0;
+	      motor[rightMotor] = 0;
+	      turn = false;
+	    }
+	    else
+	    {
+	    	motor[leftMotor]  = 8;
+	      motor[rightMotor] = 8;
+	    }
+ 	 }
+	}
+
+		void forwardUntilObject(int power, int objDistance)
+		{
+			bool move = true;
+	  /* surfaces, adding them together, then dividing by 2. */
+	  while(move)
+	  {
+			if(SensorValue(sonarSensor) < objDistance)
+			{
+				motor[leftMotor]  = 0;
+	      motor[rightMotor] = 0;
+	      move = false;
+			}
+			else
+			{
+				motor[leftMotor]  = power;
+	      motor[rightMotor] = power;
+			}
+		}
+	}
+	  void raiseArmDefault()
+		{
 			//brief delay
 			wait1Msec(2000);
 			bool arm = true;
-			int result = 0;
 			while (arm)
 			{
 				//potentiometer value to stop arm movement must be higher due to
 				//power delivered to the claw, momentum/gravity, and the weight of the object
 				//will cause arm to cut off at potentiometer value but drift lower for a longer time
-				if(SensorValue(potentiometerSensor) == 1600 || SensorValue(potentiometerSensor) > 1600)
+				if(SensorValue(potentiometerSensor) > 1350)
 				{
 					arm = false;
 					motor[armMotor] = 0;
+
+				}
+				else
+				{
+
+					motor[armMotor] = -30;
+				}
+			}
+	}
+
+  void raiseArm(int power)
+	{
+			//brief delay
+			wait1Msec(2000);
+			bool arm = true;
+			while (arm)
+			{
+				//potentiometer value to stop arm movement must be higher due to
+				//power delivered to the claw, momentum/gravity, and the weight of the object
+				//will cause arm to cut off at potentiometer value but drift lower for a longer time
+				if(SensorValue(potentiometerSensor) > 3000)
+				{
+					arm = false;
+					motor[armMotor] = 0;
+
 				}
 				else
 				{
@@ -118,16 +214,20 @@ I2C_2               leftIEM             Integrated Encoder    Encoted mounted on
 
 	void openClaw()
 	{
+		motor[clawMotor]= 0;
+		wait1Msec(3000);
+		motor[clawMotor] = 127;
 		wait1Msec(2000);
-		motor[clawMotor] = 50;
-		wait1Msec(1100);
+
 	}
 
 	void closeClaw()
 	{
+		motor[clawMotor] =0;
 		wait1Msec(2000);
 		motor[clawMotor] = -50;
-		wait1Msec(1100);
+		wait1Msec(2000);
+
 	}
 
 	void lowerArm(int power)
@@ -140,14 +240,14 @@ I2C_2               leftIEM             Integrated Encoder    Encoted mounted on
 				//potentiometer value to stop arm movement must be higher due to
 				//power delivered to the claw, momentum/gravity, and the weight of the object
 				//will cause arm to cut off at potentiometer value but drift lower for a longer time
-				if(SensorValue(potentiometerSensor) == 1599 || SensorValue(potentiometerSensor) < 1599)
+				if(SensorValue(potentiometerSensor) < 2500)
 				{
 					arm = false;
 					motor[armMotor] = 0;
+
 				}
 				else
 				{
-					motor[armMotor] = 0;
 					motor[armMotor] = power;
 				}
 			}
@@ -199,13 +299,32 @@ I2C_2               leftIEM             Integrated Encoder    Encoted mounted on
 
 task main()
 {
-	wait1Msec(2000);
+	raiseArmDefault();
 	openClaw();
-	followLineUntilObject(15, 8);
-	wait1Msec(4000);
+	findLineTurnLeft();
+	followLineUntilObject(15, 6);
+	motor[leftMotor] = 0;
+	motor[rightMotor] = 0;
 	closeClaw();
-	wait1Msec(2000);
-	raiseArm(30);
+	raiseArm(110);
+	turnRobot(1.6, 63, right);
+	forwardMovement(1, 63);
+	turnRobot(1.55, 63, right);
+	findLineTurnLeft();
+	followLineUntilNoLine(23);
+	lowerArm(20);
+	openClaw();
+	raiseArmDefault();
+	turnRobot(1.5, 63, left);
+	forwardUntilObject(23, 10);
+
+
+
+
+	//raiseArm(20);
+
+	//openClaw();
+	//closeClaw();
 
 	//motor[clawMotor] = -5;
 
