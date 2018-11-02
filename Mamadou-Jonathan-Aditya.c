@@ -89,7 +89,7 @@ task main()
 
   forwardMovement(2.75, 63);
   turnRobot(1.72, 83, right);
-  forwardMovement(2.0,63);
+  forwardMovement(1.82,63);
 
 
 	resetMotorEncoder(rightMotor);
