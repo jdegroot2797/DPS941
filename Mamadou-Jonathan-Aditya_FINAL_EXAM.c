@@ -298,7 +298,7 @@ I2C_2               leftIEM             Integrated Encoder    Encoted mounted on
 	}
 
 	//first line, turn right
-	void a()
+	void c()
 	{
 		wait1Msec(100);
 		findLine();
@@ -326,7 +326,7 @@ I2C_2               leftIEM             Integrated Encoder    Encoted mounted on
 	}
 
 		//first line, turn right
-	void c()
+	void d()
 	{
 		wait1Msec(100);
 		findLine();
@@ -344,7 +344,7 @@ I2C_2               leftIEM             Integrated Encoder    Encoted mounted on
 	}
 
 			//third line, turn left
-	void d()
+	void a()
 	{
 		wait1Msec(100);
 		findLine();
@@ -361,10 +361,25 @@ I2C_2               leftIEM             Integrated Encoder    Encoted mounted on
 		raiseArm(120);
 	}
 
+	void q()
+	{
+		turnRobotPivot(0.325, 63, left);
+	}
+
+	void e()
+	{
+		turnRobotPivot(0.325, 63, right);
+	}
+
+
 
 task main() {
 
-	char cmd;
+
+			c();
+
+
+	/*char cmd;
 	int check = 1;
 
 	while(check == 1)
@@ -387,9 +402,20 @@ task main() {
 		{
 			d();
 		}
+
+		else if(cmd == 'q')
+		{
+			q();
+		}
+
+		else if(cmd == 'e')
+		{
+			e();
+		}
+
 		else if(cmd == 'x')
 		{
 			check = 0;
 		}
-	}
+	}*/
 }
